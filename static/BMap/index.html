@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<title>百度地图离线API V2.0</title>
+	<style type="text/css">
+		html {
+			height: 100%
+		}
+
+		body {
+			height: 100%;
+			margin: 0px;
+			padding: 0px;
+			position: relative;
+		}
+
+		#container {
+			height: 100%;
+			clear: both;
+		}
+
+		form {
+			position: absolute;
+			top: 0;
+			left: 300px;
+			z-index: 1;
+		}
+	</style>
+	<script type="text/javascript" src="baidumap_offline_v2_load.js"></script>
+</head>
+
+<body>
+<form action="">
+	经度：<input type="text" placeholder="请输入经度" id="lng"> 纬度：
+	<input type="text" placeholder="请输入纬度" id="lat">
+	<input type="button" value="查询" onclick="getAddress();" />
+</form>
+<div id="container"></div>
+
+<script type="text/javascript">
+	// 百度地图API功能
+	var map = new BMap.Map("container", {
+		minZoom: 1,//缩放最小级别
+		maxZoom: 10//缩放最大级别
+	});
+
+	// 中心点
+	var point = new BMap.Point(113.338434,23.125805);
+	var marker = new BMap.Marker(point);
+	map.centerAndZoom(point, 10);
+	// 启用滚轮放大缩小
+	map.enableScrollWheelZoom();
+	// 启用键盘操作。
+	map.enableKeyboard();
+
+	//左上角添加工具条控件
+	map.addControl(new BMap.NavigationControl());
+	// 左上角添加比例尺控件
+	map.addControl(new BMap.ScaleControl({
+		anchor: BMAP_ANCHOR_TOP_LEFT
+	}));
+	//右下角添加缩略图控件
+	map.addControl(new BMap.OverviewMapControl({
+		isOpen: true,
+		anchor: BMAP_ANCHOR_BOTTOM_RIGHT
+	}));
+
+	// 数组记录标注个数
+	var allOverlay = [],
+		currentLength = 0;
+	// 添加文字标签
+	function addLabel(marker) {
+		marker.addEventListener("mouseover", function () {
+			var p = this.getPosition(),
+				label = new BMap.Label("经度：" + p.lng + "</br>" + "纬度：" + p.lat, {
+					offset: new BMap.Size(20, -10) });
+			this.setLabel(label);
+		});
+	}
+
+	// 删除文字标签
+	function delLabel(marker) {
+		marker.addEventListener("mouseout", function () {
+			var label = this.getLabel();
+			label.setContent("");//设置标签内容为空
+			label.setStyle({
+				borderWidth: "0px"
+			});//设置标签边框宽度为0  
+		});
+	}
+
+	// 固定文字标签
+	function fixLabel(marker) {
+		marker.addEventListener("click", function () {
+			var p = this.getPosition(),
+				label = new BMap.Label("经度：" + p.lng + "</br>" + "纬度：" + p.lat, {
+					offset: new BMap.Size(20, -10) }),
+			labelLocal = this.getLabel();
+			labelLocal.setStyle({
+				borderWidth: "2px"
+			});
+			this.setLabel(label);
+			this.disableDragging();
+		});
+	}
+	// 右键鼠标操作添加标注
+	var menu = new BMap.ContextMenu();
+	var txtMenuItem = [{
+		text: '添加标注',
+		callback: function (e) {
+			var marker = new BMap.Marker(e);
+			map.addOverlay(marker);
+			// 可以拖曳
+			marker.enableDragging();
+
+			currentLength = allOverlay.length;
+			// 遍历所有标注
+			allOverlay = map.getOverlays();
+			delPoint();
+
+			// 鼠标悬浮时经纬度出现
+			addLabel(marker);
+			// 鼠标离开时经纬度消失
+			delLabel(marker);
+			// 点击标注固定经纬度且不可拖曳
+			fixLabel(marker);
+		}
+	}];
+	for (var i = 0; i < txtMenuItem.length; i++) {
+		menu.addItem(new BMap.MenuItem(txtMenuItem[i].text, txtMenuItem[i].callback, 100));
+	}
+	map.addContextMenu(menu);
+
+	// 删除标注
+	var delPoint = function () {
+		for (var i = currentLength; i < allOverlay.length; i++) {
+			//创建右键菜单
+			var markerMenu = new BMap.ContextMenu();
+			markerMenu.addItem(new BMap.MenuItem('删除', removeMarker.bind(allOverlay[i])));
+			allOverlay[i].addContextMenu(markerMenu);
+		}
+	}
+	var removeMarker = function (e, ee, marker) {
+		map.removeOverlay(marker);
+		allOverlay = map.getOverlays();
+		// 更新删除之后需要被添加删除功能的起始点
+		currentLength = allOverlay.length;
+
+	}
+
+	//根据经纬度调转到所对应的位置。
+	function getAddress() {
+		var longitude = document.getElementById("lng").value;
+		var latitude = document.getElementById("lat").value;
+		if (!longitude) {
+			alert("请输入经度");
+			return
+		}
+		if (!latitude) {
+			alert("请输入纬度");
+			return
+		}
+		// 一秒后移动到搜索的位置
+		setTimeout(function () {
+			map.panTo(new BMap.Point(longitude, latitude));
+		}, 1000);
+		var point = new BMap.Point(longitude, latitude);
+		var marker = new BMap.Marker(point);
+		map.addOverlay(marker);
+		marker.setAnimation(BMAP_ANIMATION_BOUNCE); //跳动的动画
+		map.centerAndZoom(point, 14);
+		// 鼠标悬浮时经纬度出现
+		addLabel(marker);
+		// 鼠标离开时经纬度消失
+		delLabel(marker);
+		// 点击标注固定经纬度且不可拖曳
+		fixLabel(marker);
+		// 为了获取最新的标注点
+		currentLength = allOverlay.length;
+		// 遍历标注
+		allOverlay = map.getOverlays();
+		// 添加删除功能
+		delPoint();
+	}
+</script>
+</body>
+
+</html>
