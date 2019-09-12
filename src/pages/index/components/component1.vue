@@ -1,4 +1,4 @@
-<!-- 总览页地图 -->
+<!-- 组件 -->
 <template>
   <div></div>
 </template>

@@ -1,4 +1,4 @@
-<!-- 首页 -->
+<!-- 页面入口 -->
 <template>
   <div class="container"></div>
 </template>

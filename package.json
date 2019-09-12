@@ -1,5 +1,5 @@
 {
-  "name": "msaapictrue",
+  "name": "fh-vue-cli",
   "version": "1.0.0",
   "description": "A Vue.js project",
   "author": "AGitCalledHangFeng <289949837@qq.com>",
@@ -26,6 +26,7 @@
     "postcss-viewport-units": "^0.1.6",
     "postcss-write-svg": "^3.0.1",
     "qs": "^6.7.0",
+    "raven-js": "^3.27.2",
     "vue": "^2.5.2",
     "vue-count-to": "^1.0.13",
     "vue-router": "^3.0.1",

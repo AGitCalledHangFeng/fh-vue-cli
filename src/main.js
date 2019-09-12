@@ -1,6 +1,9 @@
 // The Vue build version to load with the `import` command
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import Vue from 'vue'
+// 引入错误监听机制
+import './utils/handleError'
+
 import App from './App'
 // 路由模块引入
 import router from './router'
@@ -11,7 +14,16 @@ import store from './store'
 import axios from 'axios'
 Vue.prototype.$axios = axios
 import api from './api' // 导入api接口
-Vue.prototype.$api = api; // 将api挂载到vue的原型上
+Vue.prototype.$api = api // 将api挂载到vue的原型上
+
+// ElementUI引入(使用的组件比较少，暂时不考虑全量引入，采用按需引入)
+import { MessageBox, Message } from 'element-ui'
+Vue.prototype.$msgbox = MessageBox
+Vue.prototype.$confirm = MessageBox.confirm
+Vue.prototype.$message = Message
+// import ElementUI from 'element-ui'
+// Vue.use(ElementUI)
+import 'element-ui/lib/theme-chalk/index.css'
 
 // echarts引入
 // import echarts from "echarts"
@@ -26,39 +38,12 @@ import './assets/css/normallize.css'
 import './assets/css/animate.min.css'
 import './assets/css/common.scss'
 // js
-import global_ from "./assets/js/global.js"
+import global_ from './assets/js/global.js'
 Vue.prototype.GLOBAL = global_
 
-require('./mock'); //引入mock数据，关闭则注释该行
+require('./mock') //引入mock数据，关闭则注释该行
 
 Vue.config.productionTip = false
-
-// 系统错误捕获
-const errorHandler = (error, vm) => {
-  console.error("抛出全局异常");
-  console.error(vm);
-  console.error(error);
-  if (Math.random() < 1) { //采集率，暂定为100%采集
-    report(error); // 上报错误信息
-  }
-};
-Vue.config.errorHandler = errorHandler;
-Vue.prototype.$throw = error => errorHandler(error, this);
-
-//为了防止有漏掉的 Promise 异常
-window.addEventListener("unhandledrejection", function (error) {
-  error.preventDefault();
-  console.log("捕获到Promise异常：", error);
-  if (Math.random() < 1) { //采集率，暂定为100%采集
-    report(error); // 上报错误信息
-  }
-  return true;
-});
-
-function report(error) {
-  let reportUrl = ''; //错误收集接口
-  new Image().src = `${reportUrl}?logs=${error}`;
-}
 
 /* eslint-disable no-new */
 new Vue({
